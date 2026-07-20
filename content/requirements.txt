@@ -1,0 +1,9 @@
+langchain
+langchain-core
+langchain-community
+langchain-anthropic
+python-dotenv
+pydantic
+tavily-python
+wikipedia
+requests
