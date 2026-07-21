@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Translation Batch{% endblock %}
+{% block content %}
+<h1>Translation Batch</h1>
+{% if batch %}
+  <p class="{{ 'success' if batch.status == 'done' else '' }}">
+    {{ batch.completed_jobs }} / {{ batch.total_jobs }} complete &mdash; status: {{ batch.status }}
+  </p>
+  <p><a class="btn btn-primary" href="/translate/batch/{{ batch.id }}/zip">Download all as ZIP</a></p>
+
+  {% set errors = jobs | selectattr("status", "equalto", "error") | list %}
+  {% if errors %}
+    <details><summary>{{ errors|length }} failed jobs</summary>
+      <ul class="list-plain">{% for j in errors %}<li class="error">{{ j.source_filename }} &rarr; {{ j.target_language }}: {{ j.error_message }}</li>{% endfor %}</ul>
+    </details>
+  {% endif %}
+
+  {% for lang in jobs | map(attribute="target_language") | unique | list %}
+    <h2>{{ lang }}</h2>
+    <div class="card-grid">
+      {% for j in jobs if j.target_language == lang and j.status == "success" %}
+        <div class="card">
+          <img src="{{ j.image_url }}" alt="{{ j.source_filename }}">
+          <p>{{ j.source_filename }}<br><a href="{{ j.image_url }}" download>Download</a></p>
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+{% else %}
+  <p class="error">Batch not found.</p>
+{% endif %}
+{% endblock %}

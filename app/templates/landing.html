@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Al-Nafi Content & Image Generation{% endblock %}
+{% block content %}
+<h1>Al-Nafi Content & Image Generation</h1>
+<p style="color:var(--color-text-muted)">Generate on-brand content, marketing images, and translations for Al-Nafi Group.</p>
+
+<div class="card-grid">
+  <div class="card">
+    <h3>Generate Content</h3>
+    <p style="font-size:var(--text-sm);color:var(--color-text-muted)">Long-form articles &amp; social captions</p>
+    <a class="btn btn-primary" href="/content/new">Start Writing</a>
+  </div>
+  <div class="card">
+    <h3>Generate Image</h3>
+    <p style="font-size:var(--text-sm);color:var(--color-text-muted)">Marketing graphics with logo overlay</p>
+    <a class="btn btn-primary" href="/image/new">Start Generating</a>
+  </div>
+  <div class="card">
+    <h3>Translate Posts</h3>
+    <p style="font-size:var(--text-sm);color:var(--color-text-muted)">Batch-translate existing images</p>
+    <a class="btn btn-primary" href="/translate">Start Translating</a>
+  </div>
+  <div class="card">
+    <h3>History</h3>
+    <p style="font-size:var(--text-sm);color:var(--color-text-muted)">Browse past generations</p>
+    <a class="btn btn-primary" href="/history">Open History</a>
+  </div>
+</div>
+{% endblock %}

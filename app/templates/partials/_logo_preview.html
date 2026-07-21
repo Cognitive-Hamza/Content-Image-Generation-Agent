@@ -1,0 +1,12 @@
+<div class="logo-preview">
+  {% if sector_logo.found %}
+    <img src="{{ sector_logo.data_uri }}" alt="{{ sector_logo.name }}" style="width:120px;border-radius:6px;">
+  {% else %}
+    <span>{{ sector_logo.name }} — logo not found</span>
+  {% endif %}
+  {% for logo in accred_logos %}
+    {% if logo.found %}
+      <img src="{{ logo.data_uri }}" alt="{{ logo.name }}" style="height:32px;margin-left:6px;">
+    {% endif %}
+  {% endfor %}
+</div>

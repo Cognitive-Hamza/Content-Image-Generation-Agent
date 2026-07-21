@@ -1,0 +1,1 @@
+Mock refined content

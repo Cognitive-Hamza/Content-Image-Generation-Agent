@@ -3,16 +3,19 @@ services:
     build: .
     image: alnafi-content-image-app:latest
     ports:
-      - "8501:8501"
+      - "8000:8000"
     env_file:
       - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - ./data:/app/data
       - ./assets:/app/assets:ro
       - ./outputs:/app/outputs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
       interval: 30s
       timeout: 5s
       start_period: 15s
@@ -23,3 +26,24 @@ services:
           memory: 2G
         reservations:
           memory: 512M
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cig
+      POSTGRES_PASSWORD: cig
+      POSTGRES_DB: cig
+    volumes:
+      - cig_pgdata:/var/lib/postgresql/data
+    # No published host port — internal network only. Local dev tooling
+    # (alembic, scripts/) connects to `postgres:5432` from another container,
+    # or `docker compose exec postgres psql` for a shell.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cig -d cig"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  cig_pgdata:

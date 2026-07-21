@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Generate Content{% endblock %}
+{% block content %}
+<h1>Generate Content</h1>
+
+<form hx-post="/content/generate" hx-target="#gen-result" hx-swap="innerHTML">
+  <label>Mode
+    <select name="mode" onchange="
+        document.getElementById('caption-fields').style.display = this.value === 'social_captions' ? 'block' : 'none';
+        document.getElementById('longform-fields').style.display = this.value === 'social_captions' ? 'none' : 'block';">
+      <option value="long_form">Long-form content</option>
+      <option value="social_captions">Social media captions</option>
+    </select>
+  </label>
+
+  <label>Topic <input type="text" name="topic" required autofocus></label>
+
+  <label>Platform
+    <select name="platform_key">
+      {% for key, plat in platforms.items() %}
+        <option value="{{ key }}">{{ plat[0] }} ({{ plat[1] }})</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <div id="longform-fields">
+    <label>Content type
+      <select name="content_type_key">
+        {% for key, ct in content_types.items() %}
+          <option value="{{ key }}">{{ ct[0] }} — {{ ct[1] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <fieldset id="caption-fields" style="display:none">
+    <legend>Social captions</legend>
+    {% for p in social_platforms %}
+      <label><input type="checkbox" name="chosen_platforms" value="{{ p }}"> {{ p }}</label>
+    {% endfor %}
+    <label>Post type
+      <select name="post_type">
+        {% for key, name in social_post_types.items() %}
+          <option value="{{ name }}">{{ name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Caption goal <input type="text" name="caption_goal"></label>
+  </fieldset>
+
+  <details>
+    <summary>Advanced options</summary>
+    <label>Target keywords <input type="text" name="keywords"></label>
+    <label>Audience <input type="text" name="audience" value="general readers"></label>
+    <label>Tone
+      <select name="tone_key">
+        {% for key, name in tones.items() %}
+          <option value="{{ key }}">{{ name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <fieldset>
+      <legend>Page to promote</legend>
+      <input type="text" placeholder="Search a page to promote..." name="query"
+             hx-post="/content/pages/search" hx-trigger="keyup changed delay:400ms"
+             hx-target="#page-search-results" hx-swap="innerHTML" hx-include="[name='platform_key']">
+      <div id="page-search-results"></div>
+      <input type="text" name="page_promoted" placeholder="Selected page (or type one directly)">
+    </fieldset>
+  </details>
+
+  <button type="submit">Generate</button>
+</form>
+
+<div id="gen-result"></div>
+
+<h2>Recent generations</h2>
+<div hx-get="/content/history" hx-trigger="load" hx-target="this" hx-swap="innerHTML"></div>
+{% endblock %}

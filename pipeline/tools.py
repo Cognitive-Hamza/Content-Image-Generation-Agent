@@ -1,5 +1,6 @@
 import requests
 from datetime import datetime
+from functools import lru_cache
 from langchain_tavily import TavilySearch
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
@@ -8,12 +9,14 @@ from langchain_core.tools import StructuredTool
 
 # ── TAVILY SEARCH (primary search tool) ───────────────────────────────────────
 
-tavily_search = TavilySearch(
-    max_results=5,
-    search_depth="advanced",
-    include_answer=True,
-    include_images=False,
-)
+@lru_cache
+def get_tavily_tool() -> TavilySearch:
+    return TavilySearch(
+        max_results=5,
+        search_depth="advanced",
+        include_answer=True,
+        include_images=False,
+    )
 
 
 # ── WIKIPEDIA (free, zero API key required) ────────────────────────────────────

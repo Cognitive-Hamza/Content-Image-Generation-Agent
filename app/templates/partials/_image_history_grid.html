@@ -1,0 +1,19 @@
+{% if posts %}
+<div class="card-grid">
+  {% for p in posts %}
+  <div class="card">
+    <img src="{{ p.image_url }}" alt="{{ p.headline }}">
+    <p><strong>{{ p.headline }}</strong><br>
+      <span style="color:var(--color-text-muted);font-size:var(--text-sm)">{{ p.sector }} &middot; {{ p.post_type }}</span>
+    </p>
+    <a href="{{ p.image_url }}" download>Download</a>
+    &middot;
+    <button type="button"
+      hx-post="/history/images/{{ p.id }}/delete" hx-target="closest div" hx-swap="outerHTML"
+      hx-confirm="Delete this image?">Delete</button>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">No posts generated yet — try the Generate Image page to create your first one.</p>
+{% endif %}

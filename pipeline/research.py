@@ -1,7 +1,7 @@
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 
-from .llm import llm
-from .tools import tavily_search, wiki_tool, jina_tool, date_tool
+from .llm import get_llm
+from .tools import get_tavily_tool, wiki_tool, jina_tool, date_tool
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  STAGE 1 — RESEARCH
@@ -80,8 +80,8 @@ The writer will receive the specific Al-Nafi page(s) to promote (there may be mo
 than one). Your job is to surface the best Al-Nafi-aligned solution framing so the
 writer can use it naturally."""
 
-RESEARCH_TOOLS = [tavily_search, wiki_tool, jina_tool, date_tool]
-_tool_map = {t.name: t for t in RESEARCH_TOOLS}
+def _research_tools():
+    return [get_tavily_tool(), wiki_tool, jina_tool, date_tool]
 
 
 def run_research(query: str) -> str:
@@ -89,7 +89,9 @@ def run_research(query: str) -> str:
     Run the research loop: bind tools to LLM, let Claude decide what to call,
     execute tool calls, feed results back, repeat until Claude stops calling tools.
     """
-    llm_with_tools = llm.bind_tools(RESEARCH_TOOLS)
+    research_tools = _research_tools()
+    tool_map = {t.name: t for t in research_tools}
+    llm_with_tools = get_llm().bind_tools(research_tools)
 
     messages = [
         SystemMessage(content=RESEARCH_SYSTEM),
@@ -113,9 +115,9 @@ def run_research(query: str) -> str:
             name = tc["name"]
             args = tc["args"]
 
-            if name in _tool_map:
+            if name in tool_map:
                 try:
-                    result = _tool_map[name].run(args)
+                    result = tool_map[name].run(args)
                 except Exception as e:
                     result = f"Tool error ({name}): {e}"
             else:

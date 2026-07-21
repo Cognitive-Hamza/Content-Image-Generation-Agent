@@ -1,0 +1,193 @@
+/* Design system: spacing scale, type scale, color tokens.
+   One file, applied everywhere — no per-template styling. */
+
+:root {
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Type scale */
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.25rem;
+
+  /* Color tokens — functional, not decorative */
+  --color-bg: #ffffff;
+  --color-surface: #f7f8fa;
+  --color-border: #e2e5ea;
+  --color-text: #1a1d23;
+  --color-text-muted: #5a6472;
+
+  --color-primary: #2d6fbc;
+  --color-primary-hover: #23568f;
+  --color-primary-contrast: #ffffff;
+
+  --color-success: #1e7e34;
+  --color-success-bg: #e8f5e9;
+  --color-error: #b00020;
+  --color-error-bg: #fdecea;
+  --color-processing: #b8860b;
+  --color-processing-bg: #fff8e1;
+
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+
+h1 { font-size: var(--text-2xl); margin: 0 0 var(--space-5); }
+h2 { font-size: var(--text-lg); margin: var(--space-6) 0 var(--space-3); }
+h3 { font-size: var(--text-base); margin: var(--space-4) 0 var(--space-2); }
+
+a { color: var(--color-primary); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.topbar nav a {
+  margin-right: var(--space-4);
+  text-decoration: none;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+}
+.topbar nav a:hover { color: var(--color-primary); }
+.signed-in-as {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+main {
+  padding: var(--space-6) var(--space-5);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ── Forms ──────────────────────────────────────────────────────────── */
+/* Base input styling applies outside <form> too — standalone HTMX-triggered
+   search boxes (e.g. history search) use the same look without a wrapping form. */
+input[type="text"], input[type="search"], input[type="number"], input[type="password"], select, textarea {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: var(--text-base);
+  font-family: inherit;
+}
+form { display: flex; flex-direction: column; gap: var(--space-4); }
+form label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+form input[type="text"], form input[type="search"], form input[type="number"],
+form input[type="password"], form select, form textarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: var(--text-base);
+  font-family: inherit;
+  margin-top: var(--space-1);
+}
+form textarea { min-height: 90px; }
+fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+fieldset legend { font-weight: 600; padding: 0 var(--space-2); }
+fieldset label { display: inline-flex; align-items: center; gap: var(--space-1); font-weight: 400; margin-right: var(--space-3); }
+
+details {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}
+details summary { cursor: pointer; font-weight: 600; font-size: var(--text-sm); }
+
+/* One dominant primary action per screen; everything else secondary. */
+button, .btn {
+  display: inline-block;
+  font-size: var(--text-base);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  text-decoration: none;
+}
+button[type="submit"], .btn-primary {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+button[type="submit"]:hover, .btn-primary:hover { background: var(--color-primary-hover); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Status / feedback — functional color usage ────────────────────── */
+.error { color: var(--color-error); background: var(--color-error-bg); padding: var(--space-3); border-radius: var(--radius); }
+.success { color: var(--color-success); background: var(--color-success-bg); padding: var(--space-3); border-radius: var(--radius); }
+.status-pill {
+  display: inline-block;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.pill-ready { background: var(--color-success-bg); color: var(--color-success); }
+.pill-missing { background: var(--color-error-bg); color: var(--color-error); }
+.pill-processing { background: var(--color-processing-bg); color: var(--color-processing); }
+
+.progress-box {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  background: var(--color-surface);
+}
+.progress-box p { margin: 0; color: var(--color-processing); font-weight: 600; }
+
+.empty-state {
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: var(--space-4);
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+}
+
+/* ── Galleries / lists — conventional patterns ─────────────────────── */
+.card-grid { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.card {
+  width: 220px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+}
+.card img { width: 100%; border-radius: var(--radius); display: block; margin-bottom: var(--space-2); }
+.list-plain { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.list-plain li { padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius); }
+
+.logo-preview img { border-radius: 6px; }
+.logo-preview { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }

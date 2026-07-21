@@ -1,0 +1,38 @@
+<div class="progress-box" hx-ext="sse" sse-connect="{{ stream_url }}">
+  <p id="progress-label" data-job-id="{{ job_id }}">Starting...</p>
+</div>
+<script>
+(function () {
+  // Short progress narrative instead of a blank spinner — mirrors the
+  // original Streamlit st.status labels 1:1.
+  var STAGE_LABELS = {
+    queued: 'Starting...',
+    researching: 'Researching your topic...',
+    writing: 'Writing the first draft...',
+    refining: 'Refining for tone and clarity...',
+    done: 'Done.',
+  };
+  var container = document.currentScript.previousElementSibling;
+  container.addEventListener('htmx:sseMessage', function (evt) {
+    try {
+      var data = JSON.parse(evt.detail.data);
+      var label = container.querySelector('#progress-label');
+      if (data.error) {
+        container.className = 'progress-box error';
+        if (label) label.textContent = 'Error: ' + data.error;
+        return;
+      }
+      if (label) {
+        if (data.total !== undefined) {
+          label.textContent = 'Completed ' + data.completed + ' / ' + data.total + ' images';
+        } else {
+          label.textContent = STAGE_LABELS[data.stage] || ('Stage: ' + data.stage);
+        }
+      }
+      if (data.redirect) {
+        window.location = data.redirect;
+      }
+    } catch (e) { /* ignore malformed frames */ }
+  });
+})();
+</script>

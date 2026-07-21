@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Generated Image{% endblock %}
+{% block content %}
+{% if post %}
+  <h1>{{ post.headline }}</h1>
+  <img src="{{ image_url }}" alt="{{ post.headline }}" style="max-width:100%;border-radius:var(--radius);">
+  <p style="color:var(--color-text-muted)"><strong>Sector:</strong> {{ post.sector }} &middot; <strong>Post type:</strong> {{ post.post_type }}</p>
+  {% if post.generation_id %}<p><a class="btn" href="/content/{{ post.generation_id }}">View source content</a></p>{% endif %}
+  <details><summary>Prompts</summary>
+    <pre style="white-space:pre-wrap">{{ post.image_prompt }}</pre>
+  </details>
+{% else %}
+  <p class="error">Record not found.</p>
+{% endif %}
+{% endblock %}

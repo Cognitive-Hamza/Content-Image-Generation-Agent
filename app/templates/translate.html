@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Batch Translate Posts{% endblock %}
+{% block content %}
+<h1>Batch Translate Posts</h1>
+
+<form hx-post="/translate/batch" hx-target="#gen-result" hx-swap="innerHTML" hx-encoding="multipart/form-data">
+  <label>Sector
+    <select name="sector">
+      {% for name, info in sectors.items() %}<option value="{{ name }}">{{ name }}</option>{% endfor %}
+    </select>
+  </label>
+
+  <label>Upload images (up to 100) <input type="file" name="images" multiple accept="image/*" required></label>
+
+  <fieldset>
+    <legend>Target languages</legend>
+    {% for lang in languages %}
+      <label><input type="checkbox" name="target_languages" value="{{ lang }}" {% if lang == "Urdu" %}checked{% endif %}> {{ lang }}</label>
+    {% endfor %}
+  </fieldset>
+
+  <details>
+    <summary>Advanced options</summary>
+    <label>Provider
+      <select name="provider_label">
+        {% for label, pid in providers.items() %}<option value="{{ label }}">{{ label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Quality
+      <select name="quality_tier">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+    </label>
+    <label>Canvas size
+      <select name="canvas_size">
+        {% for name, size in canvas_presets.items() %}<option value="{{ size }}">{{ name }} ({{ size }})</option>{% endfor %}
+      </select>
+    </label>
+  </details>
+
+  <button type="submit">Translate</button>
+</form>
+
+<div id="gen-result"></div>
+{% endblock %}

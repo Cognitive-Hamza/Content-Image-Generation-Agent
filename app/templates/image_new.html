@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Generate Image{% endblock %}
+{% block content %}
+<h1>Generate New Post</h1>
+
+{% if source_generation %}
+  <p class="success">Pre-filled from content: <strong>{{ source_generation.topic }}</strong>
+    <button type="button" onclick="this.parentElement.style.display='none'">Dismiss</button></p>
+{% endif %}
+
+<form hx-post="/image/generate" hx-target="#gen-result" hx-swap="innerHTML">
+  {% if source_generation %}<input type="hidden" name="generation_id" value="{{ source_generation.id }}">{% endif %}
+
+  <label>Al-Nafi Sector *
+    <select name="sector" id="sector-select"
+            hx-post="/image/logo-preview" hx-trigger="change" hx-target="#logo-preview" hx-include="#accred-checks input:checked, #sector-select">
+      {% for name, info in sectors.items() %}
+        <option value="{{ name }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <div id="accred-checks">
+    <label>Accreditation logos</label>
+    {% for accred in ["Pearson BTEC", "EduQual UK", "ISACA", "EADL"] %}
+      <label><input type="checkbox" name="selected_accreds" value="{{ accred }}"
+        hx-post="/image/logo-preview" hx-trigger="change" hx-target="#logo-preview" hx-include="#accred-checks input:checked, #sector-select"> {{ accred }}</label>
+    {% endfor %}
+  </div>
+  <div id="logo-preview" class="logo-preview"></div>
+
+  <label>Post Type *
+    <select name="post_type">
+      {% for pt in post_types %}<option value="{{ pt }}">{{ pt }}</option>{% endfor %}
+    </select>
+  </label>
+
+  <label>Headline * <input type="text" name="headline" value="{{ prefill.headline or '' }}" required></label>
+
+  <label>Provider
+    <select name="provider_label">
+      {% for label, pid in providers.items() %}<option value="{{ label }}">{{ label }}</option>{% endfor %}
+    </select>
+  </label>
+
+  <details>
+    <summary>Advanced options</summary>
+    <label>Session Badge
+      <select name="badge">
+        {% for b in badges %}<option value="{{ b }}">{{ b }}</option>{% endfor %}
+      </select>
+    </label>
+    <fieldset>
+      <legend>Target Platform(s)</legend>
+      {% for p in platform_targets %}
+        <label><input type="checkbox" name="platforms" value="{{ p }}"> {{ p }}</label>
+      {% endfor %}
+    </fieldset>
+
+    <label>Hook Line <input type="text" name="hook" value="{{ prefill.hook or '' }}"></label>
+    <label>Title <input type="text" name="title" value="{{ prefill.title or '' }}"></label>
+    <label>Subtitle <input type="text" name="subtitle"></label>
+    <label>Body Text <textarea name="body"></textarea></label>
+
+    <label>Canvas Size
+      <select name="canvas_size">
+        {% for name, size in canvas_presets.items() %}<option value="{{ size }}">{{ name }} ({{ size }})</option>{% endfor %}
+      </select>
+    </label>
+    <label>Quality
+      <select name="quality_tier">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+    </label>
+
+    <label>Contact Info <input type="text" name="contact_info"></label>
+    <label>Website <input type="text" name="website"></label>
+    <label>CTA Button Text <input type="text" name="cta_text"></label>
+  </details>
+
+  <button type="submit">Generate Image</button>
+</form>
+
+<div id="gen-result"></div>
+{% endblock %}

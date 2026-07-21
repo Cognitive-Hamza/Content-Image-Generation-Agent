@@ -1,0 +1,17 @@
+{% if result.success %}
+  {% if image_url %}
+    <p class="success">Image generated in {{ "%.1f"|format(result.elapsed_s) }}s.</p>
+    <img src="{{ image_url }}" alt="Generated image" style="max-width:100%;border-radius:var(--radius);">
+    <p><a class="btn" href="{{ image_url }}" download>Download Image</a>
+      {% if post %}<a class="btn" href="/image/{{ post.id }}">View detail</a>{% endif %}</p>
+    {% if result.usage %}<details><summary>Token Usage</summary><pre>{{ result.usage }}</pre></details>{% endif %}
+  {% else %}
+    <p class="success">Prompt generated. No image for the "Prompt Only" provider.</p>
+  {% endif %}
+  <details>
+    <summary>Prompt Preview</summary>
+    <pre style="white-space:pre-wrap">{{ image_prompt }}</pre>
+  </details>
+{% else %}
+  <p class="error">{{ result.error }}</p>
+{% endif %}

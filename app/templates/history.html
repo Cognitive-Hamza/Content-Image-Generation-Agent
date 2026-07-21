@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block content %}
+<h1>History</h1>
+
+<h2>Generated Content</h2>
+<input type="search" placeholder="Search by topic..." name="q"
+       hx-get="/history/content" hx-trigger="keyup changed delay:400ms" hx-target="#content-list" hx-swap="innerHTML">
+<div id="content-list">
+  {% with rows = content_rows %}{% include "partials/_content_history_list.html" %}{% endwith %}
+</div>
+
+<h2>Generated Images</h2>
+<input type="search" placeholder="Search by headline or sector..." name="q"
+       hx-get="/history/images" hx-trigger="keyup changed delay:400ms" hx-target="#image-grid" hx-swap="innerHTML">
+<div id="image-grid">
+  {% include "partials/_image_history_grid.html" with context %}
+</div>
+{% endblock %}

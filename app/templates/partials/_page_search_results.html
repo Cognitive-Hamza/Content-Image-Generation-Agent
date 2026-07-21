@@ -1,0 +1,14 @@
+{% if matches %}
+<ul>
+  {% for m in matches %}
+  <li>
+    <button type="button"
+      onclick="document.querySelector('[name=page_promoted]').value = '{{ m.page_name }}: {{ m.url }}'">
+      {{ m.page_name }} — {{ m.url }} (score {{ "%.0f"|format(m.score) }})
+    </button>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No matches yet — keep typing, or enter the page directly below.</p>
+{% endif %}

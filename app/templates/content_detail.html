@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ generation.topic if generation else "Not found" }}{% endblock %}
+{% block content %}
+{% if generation %}
+  <h1>{{ generation.topic }}</h1>
+  <p style="color:var(--color-text-muted)"><strong>Platform:</strong> {{ generation.platform }} &middot; <strong>Type:</strong> {{ generation.content_type }}</p>
+  <p><a class="btn btn-primary" href="/image/new?from_generation_id={{ generation.id }}">Send to Image Generator &rarr;</a></p>
+  <hr style="border-color:var(--color-border)">
+  <div style="white-space:pre-wrap">{{ generation.final_content }}</div>
+{% else %}
+  <p class="error">Record not found.</p>
+{% endif %}
+{% endblock %}

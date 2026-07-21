@@ -1,6 +1,8 @@
+from functools import lru_cache
+
 from langchain_core.prompts import ChatPromptTemplate
 
-from .llm import llm
+from .llm import get_llm
 from .config import SOCIAL_PLATFORM_RULES
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -328,7 +330,9 @@ Write the complete content in Markdown now.""",
     ),
 ])
 
-writer_chain = writer_prompt | llm
+@lru_cache
+def get_writer_chain():
+    return writer_prompt | get_llm()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -411,7 +415,9 @@ Write all captions now.""",
     ),
 ])
 
-social_caption_chain = social_caption_prompt | llm
+@lru_cache
+def get_social_caption_chain():
+    return social_caption_prompt | get_llm()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -593,7 +599,9 @@ Audit against all 17 criteria. Rewrite the complete article now.""",
     ),
 ])
 
-refinement_chain = refinement_prompt | llm
+@lru_cache
+def get_refinement_chain():
+    return refinement_prompt | get_llm()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -626,4 +634,6 @@ Write the three lines now.""",
     ),
 ])
 
-quick_copy_chain = quick_copy_prompt | llm
+@lru_cache
+def get_quick_copy_chain():
+    return quick_copy_prompt | get_llm()

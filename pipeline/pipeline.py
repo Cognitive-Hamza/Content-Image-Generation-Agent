@@ -2,15 +2,20 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
+    from app.storage.base import StorageBackend
 
 from .config import SOCIAL_PLATFORM_RULES
 from .research import run_research
 from .writer import (
-    writer_prompt, writer_chain,
-    refinement_chain,
-    social_caption_prompt, social_caption_chain,
-    quick_copy_chain,
+    writer_prompt, get_writer_chain,
+    get_refinement_chain,
+    social_caption_prompt, get_social_caption_chain,
+    get_quick_copy_chain,
 )
 
 OUTPUTS_DIR = Path(__file__).parent.parent / "outputs"
@@ -23,12 +28,24 @@ def slugify(text: str) -> str:
     return text[:50]
 
 
-def save_output(topic: str, content: str) -> str:
+def save_output(topic: str, content: str, *, storage: "StorageBackend | None" = None) -> tuple[str, str | None]:
+    """Writes the markdown locally (unchanged behavior) and, if a StorageBackend
+    is supplied, also pushes it through storage — returns (filepath, storage_key).
+    `storage` is optional so existing callers (the Streamlit app) are unaffected;
+    only the new FastAPI routes pass one."""
     OUTPUTS_DIR.mkdir(exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filepath = OUTPUTS_DIR / f"{slugify(topic)}_{timestamp}.md"
+    filename = f"{slugify(topic)}_{timestamp}.md"
+    filepath = OUTPUTS_DIR / filename
     filepath.write_text(content, encoding="utf-8")
-    return str(filepath)
+
+    storage_key = None
+    if storage is not None:
+        storage_key = storage.save(
+            f"outputs/generations/{filename}", content.encode("utf-8"), content_type="text/markdown"
+        )
+
+    return str(filepath), storage_key
 
 
 @dataclass
@@ -39,17 +56,21 @@ class LongFormResult:
     writer_human_text: str
     filepath: str
     db_id: int
+    output_storage_key: str | None = None
 
 
 def generate_long_form_content(
     *, topic: str, keywords: str, audience: str, content_type: str, word_count: str,
     tone: str, plat_name: str, plat_domain: str, alnafi_promo: str,
     on_stage: Callable[[str], None] | None = None,
+    storage: "StorageBackend | None" = None,
+    db: "Session",
+    created_by_user_id: int | None = None,
 ) -> LongFormResult:
     """Run the research -> write -> refine pipeline and persist the result.
-    `on_stage` is an optional progress callback (e.g. for a Streamlit spinner);
-    this module never imports streamlit itself so it stays usable standalone."""
-    from db import content_repo
+    `on_stage` is an optional progress callback for a caller-side status
+    widget (e.g. an SSE stage update)."""
+    from app.db import repo_content
 
     if on_stage:
         on_stage("researching")
@@ -73,7 +94,7 @@ def generate_long_form_content(
         f"TOPIC: {topic} | PLATFORM: {plat_name} | TYPE: {content_type} | "
         f"AUDIENCE: {audience} | KEYWORDS: {keywords} | PAGE: {alnafi_promo}"
     )
-    write_result = writer_chain.invoke({
+    write_result = get_writer_chain().invoke({
         "research": research_text,
         "topic": topic,
         "plat_name": plat_name,
@@ -90,7 +111,7 @@ def generate_long_form_content(
     if on_stage:
         on_stage("refining")
     try:
-        refined_result = refinement_chain.invoke({
+        refined_result = get_refinement_chain().invoke({
             "draft": draft,
             "audience": audience,
             "plat_name": plat_name,
@@ -103,14 +124,16 @@ def generate_long_form_content(
     except Exception:
         content = draft
 
-    filepath = save_output(topic, content)
-    db_id = content_repo.save_generation(
+    filepath, output_storage_key = save_output(topic, content, storage=storage)
+    generation = repo_content.save_generation(
+        db, created_by_user_id=created_by_user_id,
         topic=topic, platform=plat_name, page_promoted=alnafi_promo,
         content_type=content_type, audience=audience, tone=tone,
         keywords=keywords, research_brief=research_text,
         writer_system=writer_system_text, writer_human=writer_human_text,
-        final_content=content, filepath=filepath,
+        final_content=content, output_storage_key=output_storage_key,
     )
+    db_id = generation.id
 
     if on_stage:
         on_stage("done")
@@ -122,6 +145,7 @@ def generate_long_form_content(
         writer_human_text=writer_human_text,
         filepath=filepath,
         db_id=db_id,
+        output_storage_key=output_storage_key,
     )
 
 
@@ -130,13 +154,17 @@ class SocialCaptionResult:
     content: str
     filepath: str
     db_id: int
+    output_storage_key: str | None = None
 
 
 def generate_social_captions(
     *, topic: str, keywords: str, audience: str, plat_name: str, plat_domain: str,
     alnafi_promo: str, chosen_platforms: list[str], post_type: str, caption_goal: str,
+    storage: "StorageBackend | None" = None,
+    db: "Session",
+    created_by_user_id: int | None = None,
 ) -> SocialCaptionResult:
-    from db import content_repo
+    from app.db import repo_content
 
     platforms_list = "\n".join(f"- {p}" for p in chosen_platforms)
     platform_rules = "\n\n".join(
@@ -152,7 +180,7 @@ def generate_social_captions(
         f"PLATFORMS: {platforms_list}"
     )
 
-    result = social_caption_chain.invoke({
+    result = get_social_caption_chain().invoke({
         "topic": topic,
         "plat_name": plat_name,
         "plat_domain": plat_domain,
@@ -165,16 +193,17 @@ def generate_social_captions(
     })
     content = result.content if hasattr(result, "content") else str(result)
 
-    filepath = save_output(topic, content)
+    filepath, output_storage_key = save_output(topic, content, storage=storage)
     social_meta = {"platforms": chosen_platforms, "post_type": post_type, "goal": caption_goal}
-    db_id = content_repo.save_generation(
+    generation = repo_content.save_generation(
+        db, created_by_user_id=created_by_user_id,
         topic=topic, platform=plat_name, page_promoted=alnafi_promo,
         content_type="Social Media Captions", audience=audience, tone="N/A",
         keywords=keywords, research_brief="N/A (social captions — no research stage)",
         writer_system=writer_system_text, writer_human=writer_human_text,
-        final_content=content, filepath=filepath, social_meta=social_meta,
+        final_content=content, output_storage_key=output_storage_key, social_meta=social_meta,
     )
-    return SocialCaptionResult(content=content, filepath=filepath, db_id=db_id)
+    return SocialCaptionResult(content=content, filepath=filepath, db_id=generation.id, output_storage_key=output_storage_key)
 
 
 @dataclass
@@ -196,7 +225,7 @@ def generate_quick_copy(
     doesn't need (or want to wait for) the full content pipeline. Deliberately
     NOT persisted to the generations table: this is throwaway copy, not a
     tracked content asset."""
-    result = quick_copy_chain.invoke({
+    result = get_quick_copy_chain().invoke({
         "topic": topic,
         "plat_name": plat_name,
         "plat_domain": plat_domain,

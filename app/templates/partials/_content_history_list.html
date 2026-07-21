@@ -1,0 +1,14 @@
+{% if rows %}
+<ul class="list-plain">
+  {% for r in rows %}
+  <li>
+    <a href="/content/{{ r.id }}"><strong>{{ r.topic }}</strong></a><br>
+    <span style="color:var(--color-text-muted);font-size:var(--text-sm)">
+      {{ r.platform }} &middot; {{ r.content_type }} &middot; {{ r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "" }}
+    </span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty-state">No content generated yet — try the form above to create your first piece.</p>
+{% endif %}

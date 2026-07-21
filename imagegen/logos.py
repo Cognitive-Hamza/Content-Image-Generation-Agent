@@ -1,6 +1,7 @@
 import base64
 import io
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 try:
@@ -54,38 +55,37 @@ ACCREDITATION_LOGOS_WHITE = {
 }
 
 
-def _logo_to_img_tag(path, alt, style):
-    """Load a logo file from disk and return an HTML img tag, or a placeholder div if missing."""
+@dataclass
+class LogoRef:
+    name: str
+    data_uri: str | None   # None if the asset file is missing on disk
+    found: bool
+
+
+def _logo_to_data_uri(path):
+    """Load a logo file from disk and return a base64 data URI, or None if missing."""
     if not path or not os.path.exists(path):
-        return (
-            f'<div style="padding:4px 8px;background:#F5F9FF;border:1px dashed #A9C6E8;'
-            f'border-radius:4px;color:#5A6B7A;font-size:10px;font-family:monospace;">'
-            f'{alt} — logo file not found</div>'
-        )
+        return None
     ext = os.path.splitext(path)[1].lower()
     mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}.get(ext, "image/png")
     with open(path, "rb") as f:
         b64 = base64.b64encode(f.read()).decode()
-    return f'<img src="data:{mime};base64,{b64}" alt="{alt}" style="{style}" />'
+    return f"data:{mime};base64,{b64}"
 
 
-def get_sector_logo_html(sector, width=160):
-    """Return an HTML img tag for the given sector logo, loaded from disk."""
-    path = SECTOR_LOGOS.get(sector)
-    return _logo_to_img_tag(path, sector, f"width:{width}px;border-radius:6px;")
+def get_sector_logo(sector) -> "LogoRef":
+    """Return logo data for the given sector, loaded from disk."""
+    data_uri = _logo_to_data_uri(SECTOR_LOGOS.get(sector))
+    return LogoRef(name=sector, data_uri=data_uri, found=data_uri is not None)
 
 
-def get_accreditation_logos_html(accreds):
-    """Return HTML for the given list of accreditation names, loaded from disk."""
-    if not accreds:
-        return ""
-    parts = []
-    for name in accreds:
-        path = ACCREDITATION_LOGOS.get(name)
-        parts.append(
-            _logo_to_img_tag(path, name, "height:36px;border-radius:4px;margin:0 6px 6px 0;")
-        )
-    return '<div style="display:flex;flex-wrap:wrap;align-items:center;margin-top:8px;">' + "".join(parts) + "</div>"
+def get_accreditation_logos(accreds) -> list["LogoRef"]:
+    """Return logo data for the given list of accreditation names, loaded from disk."""
+    refs = []
+    for name in accreds or []:
+        data_uri = _logo_to_data_uri(ACCREDITATION_LOGOS.get(name))
+        refs.append(LogoRef(name=name, data_uri=data_uri, found=data_uri is not None))
+    return refs
 
 
 def _bg_brightness(img_rgba, x, y, w, h):
